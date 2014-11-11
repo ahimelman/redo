@@ -35,7 +35,7 @@ static void (*exception_handler[NUM_EXCEPTIONS]) (void) = {
         &exception_13, &exception_14};
 
 
-static uint32_t *stack_new(void);
+static uint32_t *stack_new(int, int);
 static void first_entry(void);
 static int invalid_syscall(void);
 static void init_syscalls(void);
@@ -103,12 +103,12 @@ static void initialize_pcb(pcb_t *p, pid_t pid, struct task_info *ti)
 
     switch (ti->task_type) {
     case KERNEL_THREAD:
-        p->ksp = stack_new();
+        p->ksp = stack_new(pid, 0);
         p->nested_count = 1;
         break;
     case PROCESS:
-        p->ksp = stack_new();
-        p->usp = stack_new();
+        p->ksp = stack_new(pid, 0);
+        p->usp = stack_new(pid, 1);
         p->nested_count = 0;
         break;
     default:
@@ -119,11 +119,11 @@ static void initialize_pcb(pcb_t *p, pid_t pid, struct task_info *ti)
 
 
 
-static uint32_t *stack_new()
+static uint32_t *stack_new(int pid, int is_user)
 {
-    static uint32_t next_stack = 0x100000;
+    uint32_t next_stack = 0x100000;
 
-    next_stack += 0x1000;
+    next_stack += ((0x1000 * pid * 2) + (is_user * 0x1000) + 0x1000);
     ASSERT(next_stack <= 0x200000);
     return (uint32_t *) next_stack;
 }
@@ -399,11 +399,40 @@ int get_max_pcbs(void)
 }
 
 
+static int search_pcb(void) {
+    int i;
+    for (i = 0; i < NUM_PCBS; i++) {
+        if(pcb[i].status == EXITED) 
+            return i;
+    }
+
+    return -1;
+}
+
 static int do_spawn(const char *filename)
 {
   (void)filename;
   //TODO: Fill this in
-  return -1;
+  int pcb_idx;
+  Process rdisk_find_status;
+  struct task_info ti;
+
+  pcb_idx = search_pcb();
+
+  if (pcb_idx == -1)
+      return -2;
+  rdisk_find_status = ramdisk_find(filename);
+  if (rdisk_find_status == 0)
+      return -1;
+
+  ti.entry_point = (uint32_t)rdisk_find_status;
+  ti.task_type = PROCESS;
+
+  initialize_pcb(&pcb[pcb_idx], pcb_idx, &ti);
+  total_ready_priority += pcb[pcb_idx].priority;
+  queue_put(&ready_queue, (node_t*)(&pcb[pcb_idx]));
+
+  return pcb_idx;
 }
 
 static int do_kill(pid_t pid)
