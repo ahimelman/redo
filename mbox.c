@@ -28,6 +28,16 @@ typedef struct
 
 static MessageBox MessageBoxen[MAX_MBOXEN];
 
+static void init_single(int i) {
+
+    semaphore_init(&(MessageBoxen[i].empty_count), MAX_MBOX_LENGTH);
+    semaphore_init(&(MessageBoxen[i].full_count), 0);
+    MessageBoxen[i].head = 0;
+    MessageBoxen[i].usage_count = 0;
+    MessageBoxen[i].tail = 0;
+    MessageBoxen[i].message_count = 0;
+}
+
 /* Perform any system-startup
  * initialization for the message
  * boxes.
@@ -38,13 +48,8 @@ void init_mbox(void)
   //TODO: Fill this in
   int i;
   for (i = 0; i < MAX_MBOXEN; i++) {
-    semaphore_init(&(MessageBoxen[i].empty_count), MAX_MBOX_LENGTH);
-    semaphore_init(&(MessageBoxen[i].full_count), 0);
-    lock_init(&(MessageBoxen[i].lock));
-    MessageBoxen[i].head = 0;
-    MessageBoxen[i].usage_count = 0;
-    MessageBoxen[i].tail = 0;
-    MessageBoxen[i].message_count = 0;
+      init_single(i);
+      lock_init(&(MessageBoxen[i].lock));
   }
 }
 
@@ -87,6 +92,9 @@ void do_mbox_close(mbox_t mbox)
 {
   (void)mbox;
   //TODO: Fill this in
+  MessageBoxen[mbox].usage_count--;
+  if (MessageBoxen[mbox].usage_count <= 0)
+      init_single(mbox);
 }
 
 /* Determine if the given
