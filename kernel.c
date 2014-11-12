@@ -119,7 +119,10 @@ static void initialize_pcb(pcb_t *p, pid_t pid, struct task_info *ti)
     *--p->ksp = (uint32_t) & first_entry;
     for (i = 0; i < MAX_MBOXEN; i++) {
         p->open_mboxes[i] = 0;
-    } 
+    }
+
+    condition_init(&p->condition);
+    lock_init(&p->lock);
 }
 
 
@@ -477,9 +480,8 @@ static int do_wait(pid_t pid)
   //TODO: Fill this in
   if (pcb[pid].status == EXITED)
       return -1;
-  lock_t l;
-  lock_init(&l);
-  condition_wait(&l, &pcb[pid].condition);
+  condition_wait(&pcb[pid].lock, &pcb[pid].condition);
+  lock_release(&pcb[pid].lock);
   return 0;
 }
 

@@ -67,6 +67,7 @@ typedef struct pcb {
     /* For deadlock detection */
     struct lock * waiting_for_lock;
     condition_t condition;
+    lock_t lock;
     int open_mboxes[MAX_MBOXEN];
 } pcb_t;
 
