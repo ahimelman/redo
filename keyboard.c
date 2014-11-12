@@ -270,17 +270,11 @@ void keyboard_init(void) {
 /* Function to read a character from the keyboard queue. */
 
 /* phony input string */
-static const char message[] = "help\nplane\ncount\n";
-static int moff = 0;
 
 int do_getchar()
 {
-  do_sleep(1000);
-  char c = message[moff];
-  moff++;
-  if( message[moff] == '\0' )
-    moff = 0;
-
+  char c;
+  do_mbox_recv(keyboard_mbox, &c, sizeof(char));
   return (int)c;
 }
 
@@ -290,4 +284,5 @@ int do_getchar()
 static void putchar(struct character *c) {
   (void)c;
   //TODO: Fill this in
+  do_mbox_send(keyboard_mbox, &(c->character), sizeof(unsigned char));
 }
