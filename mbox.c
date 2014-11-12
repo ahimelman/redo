@@ -108,7 +108,7 @@ int do_mbox_is_full(mbox_t mbox)
 {
   (void)mbox;
   //TODO: Fill this in
-  return 1;
+  return MessageBoxen[mbox].message_count == MAX_MBOX_LENGTH;
 }
 
 /* Enqueues a message onto
