@@ -1,4 +1,5 @@
 #include "common.h"
+#include "util.h"
 #include "mbox.h"
 #include "sync.h"
 
@@ -61,6 +62,22 @@ mbox_t do_mbox_open(const char *name)
 {
   (void)name;
   //TODO: Fill this in
+  int i;
+  for (i = 0; i < MAX_MBOXEN; i++) {
+    if (same_string(name, MessageBoxen[i].name)) {
+        MessageBoxen[i].usage_count++;
+        return i;
+    }
+  }
+
+  for (i = 0; i < MAX_MBOXEN; i++) {
+    if (MessageBoxen[i].usage_count == 0) {
+        MessageBoxen[i].usage_count++;
+        bcopy((char *)name, MessageBoxen[i].name, MAX_MESSAGE_LENGTH);
+        return i;
+    }
+  }
+
   return -1;
 }
 
