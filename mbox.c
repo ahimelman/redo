@@ -2,7 +2,7 @@
 #include "util.h"
 #include "mbox.h"
 #include "sync.h"
-
+#include "scheduler.h"
 
 typedef struct
 {
@@ -71,6 +71,7 @@ mbox_t do_mbox_open(const char *name)
   for (i = 0; i < MAX_MBOXEN; i++) {
     if (same_string(name, MessageBoxen[i].name)) {
         MessageBoxen[i].usage_count++;
+        current_running->open_mboxes[i] = 1;
         return i;
     }
   }
@@ -79,6 +80,7 @@ mbox_t do_mbox_open(const char *name)
     if (MessageBoxen[i].usage_count == 0) {
         MessageBoxen[i].usage_count++;
         bcopy((char *)name, MessageBoxen[i].name, MAX_MESSAGE_LENGTH);
+        current_running->open_mboxes[i] = 1;
         return i;
     }
   }
@@ -93,6 +95,7 @@ void do_mbox_close(mbox_t mbox)
   (void)mbox;
   //TODO: Fill this in
   MessageBoxen[mbox].usage_count--;
+  current_running->open_mboxes[mbox] = 0;
   if (MessageBoxen[mbox].usage_count <= 0)
       init_single(mbox);
 }

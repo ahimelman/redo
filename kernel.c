@@ -93,6 +93,7 @@ void _start(void)
 
 static void initialize_pcb(pcb_t *p, pid_t pid, struct task_info *ti)
 {
+    int i;
     p->entry_point = ti->entry_point;
     p->pid = pid;
     p->task_type = ti->task_type;
@@ -116,6 +117,9 @@ static void initialize_pcb(pcb_t *p, pid_t pid, struct task_info *ti)
         ASSERT(FALSE);
     }
     *--p->ksp = (uint32_t) & first_entry;
+    for (i = 0; i < MAX_MBOXEN; i++) {
+        p->open_mboxes[i] = 0;
+    } 
 }
 
 
@@ -439,8 +443,32 @@ static int do_spawn(const char *filename)
 static int do_kill(pid_t pid)
 {
   (void) pid;
+  int i;
   //TODO: Fill this in
-  return -1;
+  
+  if (pcb[pid].status == EXITED) {
+    return -1;
+  }
+  //Remove pcb_t from current queue
+  pcb[pid].node.prev->next = pcb[pid].node.next;
+  pcb[pid].node.next->prev = pcb[pid].node.prev;
+
+  //decrement total priority
+  total_ready_priority -= pcb[pid].priority;
+  
+  //Close all message boxes
+  for (i = 0; i < MAX_MBOXEN; i++) {
+    if (pcb[pid].open_mboxes[i]) 
+        do_mbox_close(i);
+  }
+
+  //broadcast
+  condition_broadcast(&pcb[pid].condition);
+
+  //do_exit
+  pcb[pid].status = EXITED;
+
+  return 0;
 }
 
 static int do_wait(pid_t pid)
