@@ -1,16 +1,27 @@
 #include "common.h"
 #include "mbox.h"
+#include "sync.h"
 
 
 typedef struct
 {
   //TODO: Fill this in
+  char msg[MAX_MESSAGE_LENGTH];
 } Message;
 
 typedef struct
 {
   char name[MBOX_NAME_LENGTH];
   //TODO: Fill this in
+
+  int usage_count;
+  Message msgs[MAX_MBOX_LENGTH];
+  int head;
+  int tail;
+  semaphore_t empty_count;
+  semaphore_t full_count;
+  lock_t lock;
+  int message_count;
 } MessageBox;
 
 
@@ -24,6 +35,16 @@ void init_mbox(void)
 {
   (void) MessageBoxen;
   //TODO: Fill this in
+  int i;
+  for (i = 0; i < MAX_MBOXEN; i++) {
+    semaphore_init(&(MessageBoxen[i].empty_count), MAX_MBOX_LENGTH);
+    semaphore_init(&(MessageBoxen[i].full_count), 0);
+    lock_init(&(MessageBoxen[i].lock));
+    MessageBoxen[i].head = 0;
+    MessageBoxen[i].usage_count = 0;
+    MessageBoxen[i].tail = 0;
+    MessageBoxen[i].message_count = 0;
+  }
 }
 
 /* Opens the mailbox named 'name', or
