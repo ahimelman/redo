@@ -1,5 +1,6 @@
 /* kernel.c */
 
+#include "sync.h"
 #include "common.h"
 #include "interrupt.h"
 #include "kernel.h"
@@ -446,6 +447,11 @@ static int do_wait(pid_t pid)
 {
   (void) pid;
   //TODO: Fill this in
-  return -1;
+  if (pcb[pid].status == EXITED)
+      return -1;
+  lock_t l;
+  lock_init(&l);
+  condition_wait(&l, &pcb[pid].condition);
+  return 0;
 }
 
