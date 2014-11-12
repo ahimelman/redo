@@ -448,6 +448,8 @@ static int do_kill(pid_t pid)
   (void) pid;
   int i;
   //TODO: Fill this in
+  if (pid < 0 || pid >= NUM_PCBS)
+      return -1;
   if (pcb[pid].status == EXITED) {
     return -1;
   }
@@ -456,7 +458,7 @@ static int do_kill(pid_t pid)
   pcb[pid].node.next->prev = pcb[pid].node.prev;
 
   //decrement total priority
-  if (pcb[pid].status == READY)
+  if (pcb[pid].status != BLOCKED)
     total_ready_priority -= pcb[pid].priority;
   //Close all message boxes
   for (i = 0; i < MAX_MBOXEN; i++) {
@@ -477,6 +479,8 @@ static int do_wait(pid_t pid)
 {
   (void) pid;
   //TODO: Fill this in
+  if (pid < 0 || pid >= NUM_PCBS)
+      return -1;
   if (pcb[pid].status == EXITED)
       return -1;
   condition_wait(&pcb[pid].lock, &pcb[pid].condition);
