@@ -130,7 +130,6 @@ void condition_wait(lock_t * m, condition_t * c)
 
   ASSERT(disable_count);
   block( &c->wait_queue );
-
   lock_acquire_helper(m);
   leave_critical();
 

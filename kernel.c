@@ -448,7 +448,6 @@ static int do_kill(pid_t pid)
   (void) pid;
   int i;
   //TODO: Fill this in
-  
   if (pcb[pid].status == EXITED) {
     return -1;
   }
@@ -457,8 +456,8 @@ static int do_kill(pid_t pid)
   pcb[pid].node.next->prev = pcb[pid].node.prev;
 
   //decrement total priority
-  total_ready_priority -= pcb[pid].priority;
-  
+  if (pcb[pid].status == READY)
+    total_ready_priority -= pcb[pid].priority;
   //Close all message boxes
   for (i = 0; i < MAX_MBOXEN; i++) {
     if (pcb[pid].open_mboxes[i]) 
