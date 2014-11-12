@@ -159,6 +159,13 @@ void do_mbox_recv(mbox_t mbox, void *msg, int nbytes)
   (void)msg;
   (void)nbytes;
   //TODO: Fill this in
+  semaphore_down(&(MessageBoxen[mbox].full_count));
+  lock_acquire(&(MessageBoxen[mbox].lock));
+  bcopy(MessageBoxen[mbox].msgs[MessageBoxen[mbox].head].msg, (char *)msg, nbytes);
+  MessageBoxen[mbox].message_count--;
+  MessageBoxen[mbox].head = (MessageBoxen[mbox].head + 1) % MAX_MBOX_LENGTH;
+  lock_release(&(MessageBoxen[mbox].lock));
+  semaphore_up(&(MessageBoxen[mbox].empty_count));
 }
 
 /* Returns the number of processes that have
@@ -169,5 +176,6 @@ unsigned int do_mbox_usage_count(mbox_t mbox)
   (void)mbox;
   return 0;
   //TODO: Fill this in
+  return MessageBoxen[mbox].usage_count;
 }
 
