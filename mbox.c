@@ -132,7 +132,7 @@ void do_mbox_send(mbox_t mbox, void *msg, int nbytes)
   //TODO: Fill this in
   semaphore_down(&(MessageBoxen[mbox].empty_count));
   lock_acquire(&(MessageBoxen[mbox].lock));
-  bcopy((char *)msg, MessageBoxen[mbox].msgs[MessageBoxen[mbox].tail], nbytes);
+  bcopy((char *)msg, MessageBoxen[mbox].msgs[MessageBoxen[mbox].tail].msg, nbytes);
   MessageBoxen[mbox].message_count++;
   MessageBoxen[mbox].tail = (MessageBoxen[mbox].tail + 1) % MAX_MBOX_LENGTH;
   lock_release(&(MessageBoxen[mbox].lock));
@@ -159,7 +159,6 @@ void do_mbox_recv(mbox_t mbox, void *msg, int nbytes)
   (void)msg;
   (void)nbytes;
   //TODO: Fill this in
-
 }
 
 /* Returns the number of processes that have
