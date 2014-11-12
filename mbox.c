@@ -122,6 +122,7 @@ int do_mbox_is_full(mbox_t mbox)
  * call.
  * The message is 'nbytes' bytes
  * starting at 'msg'
+ * THIS IS THE PRODUCER!!!!!!
  */
 void do_mbox_send(mbox_t mbox, void *msg, int nbytes)
 {
@@ -129,6 +130,13 @@ void do_mbox_send(mbox_t mbox, void *msg, int nbytes)
   (void)msg;
   (void)nbytes;
   //TODO: Fill this in
+  semaphore_down(&(MessageBoxen[mbox].empty_count));
+  lock_acquire(&(MessageBoxen[mbox].lock));
+  bcopy((char *)msg, MessageBoxen[mbox].msgs[MessageBoxen[mbox].tail], nbytes);
+  MessageBoxen[mbox].message_count++;
+  MessageBoxen[mbox].tail = (MessageBoxen[mbox].tail + 1) % MAX_MBOX_LENGTH;
+  lock_release(&(MessageBoxen[mbox].lock));
+  semaphore_up(&(MessageBoxen[mbox].full_count));
 }
 
 /* Receives a message from the
@@ -143,6 +151,7 @@ void do_mbox_send(mbox_t mbox, void *msg, int nbytes)
  * 'nbytes' bytes will be copied
  * into this buffer; longer
  * messages will be truncated.
+ * THIS IS THE CONSUMER!!!!!!!
  */
 void do_mbox_recv(mbox_t mbox, void *msg, int nbytes)
 {
@@ -150,6 +159,7 @@ void do_mbox_recv(mbox_t mbox, void *msg, int nbytes)
   (void)msg;
   (void)nbytes;
   //TODO: Fill this in
+
 }
 
 /* Returns the number of processes that have
