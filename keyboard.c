@@ -284,5 +284,9 @@ int do_getchar()
 static void putchar(struct character *c) {
   (void)c;
   //TODO: Fill this in
-  do_mbox_send(keyboard_mbox, &(c->character), sizeof(unsigned char));
+  if (!do_mbox_is_full(keyboard_mbox)) {
+    leave_critical();
+    do_mbox_send(keyboard_mbox, &(c->character), sizeof(unsigned char));
+    enter_critical();
+  }
 }
